@@ -1,3 +1,4 @@
+
 import random
 from resource_type import Resource
 from hex import Hex
@@ -74,3 +75,5 @@ class CatanBoard:
     
 
 CatanBoard().get_random_board()
+
+

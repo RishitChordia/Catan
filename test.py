@@ -26,7 +26,3 @@ canvas.create_image(0, 0, image=img)
 # canvas.create_image(250, 300, image=img)
 # canvas.create_image(300, 300, image=img)
 root.mainloop()
-
-time.sleep(5)
-canvas.config(width=250, height=250)
-canvas.delete("all")
