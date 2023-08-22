@@ -55,6 +55,7 @@ class CatanBoard:
                 number_index += 1
             random_board.append(hex_row)
         print(random_board)
+        return random_board
         
                 
         

@@ -1,6 +1,7 @@
 import time
 import tkinter as tk
-
+from board_canvas import BoardCanvas
+from catan_board import CatanBoard
 
 def getorigin(eventorigin):
     global x, y
@@ -17,12 +18,10 @@ root = tk.Tk()
 root.bind("<Button 1>", getorigin)
 
 
-canvas = tk.Canvas(
+canvas = BoardCanvas(
     root, width=500, height=500, highlightthickness=5, highlightbackground="black"
 )
+canvas.draw_board(CatanBoard().get_random_board())
 canvas.pack()
-img = tk.PhotoImage(file="./assets/resource_hexes/brick.png")
-canvas.create_image(0, 0, image=img)
-# canvas.create_image(250, 300, image=img)
-# canvas.create_image(300, 300, image=img)
+
 root.mainloop()
