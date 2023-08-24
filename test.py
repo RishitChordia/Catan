@@ -24,4 +24,5 @@ canvas = BoardCanvas(
 canvas.draw_board(CatanBoard().get_random_board())
 canvas.pack()
 
+root.attributes('-fullscreen',True)
 root.mainloop()
