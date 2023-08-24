@@ -21,8 +21,9 @@ root.bind("<Button 1>", getorigin)
 canvas = BoardCanvas(
     root, width=500, height=500, highlightthickness=5, highlightbackground="black"
 )
-canvas.draw_board(CatanBoard().get_random_board())
 canvas.pack()
+canvas.update()
+canvas.draw_board(CatanBoard().get_random_board())
 
 root.attributes('-fullscreen',True)
 root.mainloop()
