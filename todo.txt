@@ -1,1 +1,1 @@
-1. need to rotate all images by 30 degree
+1. need to rotate all images by 30 degree DONE

@@ -39,12 +39,21 @@ class BoardCanvas(tk.Canvas):
             self.hex_icons[resource] = new_image
 
 
-    def draw_hex_row(self, x, y):
-        pass
+    def draw_hex_row(self, row_index, x, y):
+        for hex in self.board[row_index]:
+            self.create_image(x, y, image=self.hex_icons[hex.resource_type])
+            x += self.hex_width
+        
         
     def draw_hexes(self):
-        pass
-        
+        start_top = self.hex_height//2
+        width_center = self.winfo_width()//2
+        # Needs logic here to keep half border between top and bottom margins but fine for now
+        for index, row in enumerate(self.board):
+            start_left =  width_center - int(self.hex_width*((len(row)-1)/2))
+            self.draw_hex_row(index, start_left, start_top)
+            start_top += self.hex_height*3//4
+            
         
         
         
