@@ -4,7 +4,7 @@ from hex import Hex
 
 # HAS TO BE MINIMUM 0 FOR REGULAR AND 4 FOR EXTENSION
 MAX_ADJACENT_RESOURCES = 0
-MAX_NUMBER_REPETITIONS = 1
+MAX_NUMBER_REPETITIONS = 0
 NO_RED_ADJACENT = True
 NO_SAME_ADJACENT = True
 
@@ -13,7 +13,8 @@ class HexNode:
     def __init__(self, hex, coordinates=None):
         self.hex: Hex = hex
         self.coordinates: tuple[int] = coordinates
-        self.neighbors: set[HexNode] = set()
+        self.all_neighbors: set[HexNode] = set()
+        self.junctions: list[set[HexNode]] = []
         
     
     def get_token_probability(self):
@@ -21,7 +22,7 @@ class HexNode:
 
 
     def __repr__(self) -> str:
-        return super().__repr__()
+        return str(self.coordinates)
 
 
 class CatanBoard:
@@ -44,37 +45,96 @@ class CatanBoard:
         self.rows = len(board_sizes)
         self.columns = max(i for i in board_sizes)
         self.resource_counts = resource_counts
+        
+    
+    def __get_junctions(self, hex_node_map):
+        for hex_node in hex_node_map.values():
+            ordered_neighbors = []
+            
+            i, j = hex_node.coordinates
+            if i > 0:
+                direction = (
+                    -1 if self.board_sizes[i - 1] < self.board_sizes[i] else 0
+                )
+                if (i - 1, j + direction) in hex_node_map:
+                    ordered_neighbors.append(hex_node_map[(i - 1, j + direction)])
+                else:
+                    ordered_neighbors.append(None)
+                if (i - 1, j + direction + 1) in hex_node_map:
+                    ordered_neighbors.append(hex_node_map[(i - 1, j + direction + 1)])
+                else:
+                    ordered_neighbors.append(None)
+            else:
+                ordered_neighbors.extend([None, None])
+                
+            if (i, j + 1) in hex_node_map:
+                ordered_neighbors.append(hex_node_map[i, j + 1])
+            else:
+                ordered_neighbors.append(None)
+                
+            if i < self.rows - 1:
+                direction = (
+                    -1 if self.board_sizes[i + 1] < self.board_sizes[i] else 0
+                )
+                if (i + 1, j + direction + 1) in hex_node_map:
+                    ordered_neighbors.append(hex_node_map[(i + 1, j + direction + 1)])
+                else:
+                    ordered_neighbors.append(None)
+                    
+                if (i + 1, j + direction) in hex_node_map:
+                    ordered_neighbors.append(hex_node_map[(i + 1, j + direction)])
+                else:
+                    ordered_neighbors.append(None)
+            else:
+                ordered_neighbors.extend([None, None])
+                    
+            if (i, j - 1) in hex_node_map:
+                ordered_neighbors.append(hex_node_map[i, j - 1])
+            else:
+                ordered_neighbors.append(None)
+            
+            for index, node in enumerate(ordered_neighbors):
+                junction = set()
+                junction.add(hex_node)
+                if node:
+                    junction.add(node)
+                if ordered_neighbors[(index+1)%6]:
+                    junction.add(ordered_neighbors[(index+1)%6])
+                hex_node.junctions.append(junction)
+            print(hex_node.junctions)
+        pass
+        
 
-    def __get_neighbors(self, hex_node_board, hex_node_map):
-        for i, row in enumerate(hex_node_board):
-            for j, hex_node in enumerate(row):
-                if i > 0:
-                    if (i - 1, j) in hex_node_map:
-                        hex_node.neighbors.add(hex_node_map[(i - 1, j)])
-                    direction = (
-                        -1 if self.board_sizes[i - 1] < self.board_sizes[i] else 1
-                    )
-                    if (i - 1, j + direction) in hex_node_map:
-                        hex_node.neighbors.add(hex_node_map[(i - 1, j + direction)])
-                if i < self.rows - 1:
-                    if (i + 1, j) in hex_node_map:
-                        hex_node.neighbors.add(hex_node_map[(i + 1, j)])
-                    direction = (
-                        -1 if self.board_sizes[i + 1] < self.board_sizes[i] else 1
-                    )
-                    if (i + 1, j + direction) in hex_node_map:
-                        hex_node.neighbors.add(hex_node_map[(i + 1, j + direction)])
-                
-                if (i, j + 1) in hex_node_map:
-                    hex_node.neighbors.add(hex_node_map[(i, j + 1)])
-                if (i, j - 1) in hex_node_map:
-                    hex_node.neighbors.add(hex_node_map[(i, j - 1)])
-                
+    def __get_all_neighbors(self, hex_node_map):
+        for hex_node in hex_node_map.values():
+            i, j = hex_node.coordinates
+            if i > 0:
+                if (i - 1, j) in hex_node_map:
+                    hex_node.all_neighbors.add(hex_node_map[(i - 1, j)])
+                direction = (
+                    -1 if self.board_sizes[i - 1] < self.board_sizes[i] else 1
+                )
+                if (i - 1, j + direction) in hex_node_map:
+                    hex_node.all_neighbors.add(hex_node_map[(i - 1, j + direction)])
+            if i < self.rows - 1:
+                if (i + 1, j) in hex_node_map:
+                    hex_node.all_neighbors.add(hex_node_map[(i + 1, j)])
+                direction = (
+                    -1 if self.board_sizes[i + 1] < self.board_sizes[i] else 1
+                )
+                if (i + 1, j + direction) in hex_node_map:
+                    hex_node.all_neighbors.add(hex_node_map[(i + 1, j + direction)])
+            
+            if (i, j + 1) in hex_node_map:
+                hex_node.all_neighbors.add(hex_node_map[(i, j + 1)])
+            if (i, j - 1) in hex_node_map:
+                hex_node.all_neighbors.add(hex_node_map[(i, j - 1)])
+            
 
     def resource_balance_score(self, hex_node_map):
         adjacency_count = 0
         for hex_node in hex_node_map.values():
-            for neighbor in hex_node.neighbors:
+            for neighbor in hex_node.all_neighbors:
                 if neighbor.hex.resource_type == hex_node.hex.resource_type:
                     adjacency_count += 1
         
@@ -99,39 +159,43 @@ class CatanBoard:
         total_error = 0
         adjacent_tokens = 0
         for hex_node in hex_node_map.values():
-            
             if hex_node.hex.resource_type == Resource.DESERT:
                 continue
             
-            token_sum = hex_node.get_token_probability()
-            token_count = 1+len(hex_node.neighbors)
-            tokens = [hex_node.hex.number_token]
+            for junction in hex_node.junctions:
+                token_sum = 0
+                token_count = 0
+                tokens = []                    
+                
+                for neighbor in junction:
+                    if neighbor.hex.resource_type == Resource.DESERT:
+                        continue
+                    
+                    token_count += 1
+                    token_sum += neighbor.get_token_probability()
+                    
+                    if neighbor.hex.number_token in tokens:
+                        if NO_SAME_ADJACENT:
+                            # print("hehe")
+                            return float('inf')
+                        adjacent_tokens += 1
+                    tokens.append(neighbor.hex.number_token)
+                    
+                avg_token_number = token_sum/token_count
+                
+                if token_count == 3 and avg_token_number >= 4:
+                    print("junction too rich")
+                    return float('inf')
+                
+                if token_count != 1 and avg_token_number < 2:
+                    print("junction too poor")
+                    return float('inf')
+                
+                if NO_RED_ADJACENT and ((6 in tokens and 8 in tokens) or (tokens.count(6) > 1) or (tokens.count(8) > 1)):
+                    print("no red adjacent")
+                    return float('inf')
+                    
             
-            for neighbor in hex_node.neighbors:
-                if neighbor.hex.resource_type == Resource.DESERT:
-                    token_count -= 1
-                    continue
-                
-                token_sum += neighbor.get_token_probability()
-                
-                if neighbor.hex.number_token == hex_node.hex.number_token:
-                    if NO_SAME_ADJACENT:
-                        print("hehe")
-                        return float('inf')
-                    adjacent_tokens += 1
-                tokens.append(neighbor.hex.number_token)
-                
-            avg_token_number = token_sum/token_count
-            if NO_RED_ADJACENT and ((6 in tokens and 8 in tokens) or (tokens.count(6) > 1) or (tokens.count(8) > 1)):
-                print("oops")
-                return float('inf')
-                
-            if avg_token_number <= 2:
-                total_error += 2 - avg_token_number
-                
-            if avg_token_number >= 4:
-                total_error += avg_token_number - 4
-        
         print(total_error*10)
         return total_error*10
             
@@ -156,13 +220,14 @@ class CatanBoard:
                     hex_index += 1
                 hex_node_board.append(hex_row)
             
-            self.__get_neighbors(hex_node_board, hex_node_map)
+            self.__get_all_neighbors(hex_node_map)
             if self.resource_balance_score(hex_node_map) < MAX_ADJACENT_RESOURCES*2+1:
                 break
             # count till 100 iterations, keep track of best board so far, if you dont get desired,
             # then just return the best you could do in that time to save time
 
-        self.__get_neighbors(hex_node_board, hex_node_map)
+        self.__get_all_neighbors(hex_node_map)
+        self.__get_junctions(hex_node_map)
 
         while True:
             numbers = self.__get_shuffled_numbers()
