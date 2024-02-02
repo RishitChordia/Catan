@@ -9,14 +9,6 @@ from resource_type import Resource
 
 def getorigin(eventorigin):
     global count
-    # global x, y
-    # x = eventorigin.x
-    # y = eventorigin.y
-    # print(x, y)
-    # print(root.geometry())
-    # time.sleep(5)
-    # canvas.config(width=250, height=250)
-    # canvas.delete("all")
     x = root.winfo_rootx() + canvas.winfo_x()
     y = root.winfo_rooty() + canvas.winfo_y()
     x1 = x + canvas.winfo_width()
@@ -48,7 +40,7 @@ canvas = BoardCanvas(
     height=1000,
     highlightthickness=5,
     highlightbackground="black",
-    background="#fff7e2",
+    background="white",
 )
 canvas.pack()
 canvas.update()
