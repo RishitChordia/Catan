@@ -2,12 +2,15 @@ import random
 from resource_type import Resource
 from hex import Hex
 
+inf = float('inf')
+
 # HAS TO BE MINIMUM 0 FOR REGULAR AND 4 FOR EXTENSION
-MAX_ADJACENT_RESOURCES = 0
+# 2, 0, True, True for regular boards works best
+# 4, 5, True, False for extension boards works best
+MAX_ADJACENT_RESOURCES = 2
 MAX_NUMBER_REPETITIONS = 0
 NO_RED_ADJACENT = True
 NO_SAME_ADJACENT = True
-
 
 class HexNode:
     def __init__(self, hex, coordinates=None):
@@ -101,7 +104,7 @@ class CatanBoard:
                 if ordered_neighbors[(index+1)%6]:
                     junction.add(ordered_neighbors[(index+1)%6])
                 hex_node.junctions.append(junction)
-            print(hex_node.junctions)
+            # print(hex_node.junctions)
         pass
         
 
@@ -138,7 +141,7 @@ class CatanBoard:
                 if neighbor.hex.resource_type == hex_node.hex.resource_type:
                     adjacency_count += 1
         
-        print(adjacency_count)
+        # print(adjacency_count)
         return adjacency_count
 
 
@@ -147,14 +150,26 @@ class CatanBoard:
         repetitions = 0
         for hex_node in hex_node_map.values():
             if not hex_node.hex.resource_type in resource_numbers:
-                resource_numbers[hex_node.hex.resource_type] = set()
+                resource_numbers[hex_node.hex.resource_type] = []
             if hex_node.hex.number_token in resource_numbers[hex_node.hex.resource_type]:
                 repetitions += 1
-            else:
-                resource_numbers[hex_node.hex.resource_type].add(hex_node.hex.number_token)
+            resource_numbers[hex_node.hex.resource_type].append(hex_node.hex.number_token)
+                
+        for resource in resource_numbers:
+            numbers = resource_numbers[resource]
+            if resource == Resource.DESERT:
+                continue
+            token_sum = 0
+            for i in numbers:
+                token_sum += 6-abs(7-i)
+            avg_resource_number = token_sum/len(numbers)
+            if avg_resource_number > 4 or avg_resource_number < 2:
+                # print("resource too rich or poor" , avg_resource_number, numbers)
+                return inf
         
         if repetitions > MAX_NUMBER_REPETITIONS:
-            return float('inf')
+            # print("repetitions", repetitions)
+            return inf
 
         total_error = 0
         adjacent_tokens = 0
@@ -176,33 +191,27 @@ class CatanBoard:
                     
                     if neighbor.hex.number_token in tokens:
                         if NO_SAME_ADJACENT:
-                            # print("hehe")
-                            return float('inf')
+                            # print("same adjacent")
+                            return inf
                         adjacent_tokens += 1
                     tokens.append(neighbor.hex.number_token)
                     
                 avg_token_number = token_sum/token_count
                 
-                if token_count == 3 and avg_token_number >= 4:
-                    print("junction too rich")
-                    return float('inf')
+                if token_count == 3 and avg_token_number > 4:
+                    # print("junction too rich")
+                    return inf
                 
                 if token_count != 1 and avg_token_number < 2:
-                    print("junction too poor")
-                    return float('inf')
+                    # print("junction too poor")
+                    return inf
                 
                 if NO_RED_ADJACENT and ((6 in tokens and 8 in tokens) or (tokens.count(6) > 1) or (tokens.count(8) > 1)):
-                    print("no red adjacent")
-                    return float('inf')
+                    # print("no red adjacent")
+                    return inf
                     
             
-        print(total_error*10)
         return total_error*10
-            
-
-        
-        
-        
                 
 
     def get_balanced_board(self):
@@ -223,13 +232,12 @@ class CatanBoard:
             self.__get_all_neighbors(hex_node_map)
             if self.resource_balance_score(hex_node_map) < MAX_ADJACENT_RESOURCES*2+1:
                 break
-            # count till 100 iterations, keep track of best board so far, if you dont get desired,
-            # then just return the best you could do in that time to save time
 
         self.__get_all_neighbors(hex_node_map)
         self.__get_junctions(hex_node_map)
 
         while True:
+            # print("stuck")
             numbers = self.__get_shuffled_numbers()
             number_index = 0
             for i in hex_node_board:
@@ -261,7 +269,7 @@ class CatanBoard:
                 hex_index += 1
                 number_index += 1
             random_board.append(hex_row)
-        print(random_board)
+        # print(random_board)
         return random_board
 
     def __get_shuffled_resources(self):
@@ -281,8 +289,4 @@ class CatanBoard:
 
 CatanBoard().get_balanced_board()
 
-# first make adjacent hex logic
-# check number of times a resource is adjacent to itself, divide that by 2 to actually find adjacencies, it cant be more than 1
-# that is it, nothing more for resource spreading
-# balanced board - check if 2 poors or 2 reds not adjacent
-# balance resources, locations, number repetitions
+
