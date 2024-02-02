@@ -1,4 +1,1 @@
-1. need to rotate all images by 30 degree DONE
-2. properly check oval drawing on canvas and text drawing for number tokens
-3. hex node class - find all neighbors of a certain hex - used to check if board balanced or not
-4. the actual balancing - iterate till resources are balanced, then on that board iterate till numbers are balanced
+
