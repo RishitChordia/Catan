@@ -56,14 +56,17 @@ class BoardCanvas(tk.Canvas):
                 y + self.token_size,
                 fill= "#FFE9B3"
                 )
-                self.create_text(x, y, text= hex.number_token)
+                number = hex.number_token
+                if number == 6 or number == 8:
+                    self.create_text(x, y, text= hex.number_token, fill= 'red', font=("Helvetica" , 20))
+                else:
+                    self.create_text(x, y, text= hex.number_token, font=("Helvetica" , 20))
             x += self.hex_width
 
 
     def draw_hexes(self):
         start_top = self.hex_height // 2
         width_center = self.winfo_width() // 2
-        # Needs logic here to keep half border between top and bottom margins but fine for now
         for index, row in enumerate(self.board):
             start_left = width_center - int(self.hex_width * ((len(row) - 1) / 2))
             self.draw_hex_row(index, start_left, start_top)
